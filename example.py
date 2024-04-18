@@ -22,6 +22,7 @@ API_KEY = get_vestaboard_key()
 BOARD_IP = "192.168.68.66"
 
 run_time = "00:00"
+debug = False
 
 # Original data
 original_data = [
@@ -116,17 +117,20 @@ def construct_message():
     return original_data
 
 def send_post(data):
-    # Making our POST
-    url = f"http://{BOARD_IP}:7000/local-api/message"
+    if debug:
+        print(data)
+    else:
+        # Making our POST
+        url = f"http://{BOARD_IP}:7000/local-api/message"
 
-    headers = {
-        "X-Vestaboard-Local-Api-Key": API_KEY,
-        "Content-Type": "application/json"
-    }
+        headers = {
+            "X-Vestaboard-Local-Api-Key": API_KEY,
+            "Content-Type": "application/json"
+        }
 
-    post_data = json.dumps(data)
-    response = requests.post(url, headers=headers, data=post_data)
-    print(response)
+        post_data = json.dumps(data)
+        response = requests.post(url, headers=headers, data=post_data)
+        print(response)
 
 def job():
     while True:
@@ -153,6 +157,11 @@ if __name__ == "__main__" and API_KEY is not None:
         print("Entering administration mode")
         print("Force running now...")
         job()
+    elif run_time == "DEBUG":
+        debug = True
+        print("Entering debug mode")
+        print("Force running now...")
+        job()
     elif check_time_format(run_time):
         print("Input time is in the correct format.")
         can_run = True
@@ -169,11 +178,12 @@ if __name__ == "__main__" and API_KEY is not None:
     
     print("Waiting to run job...")
     counter = 1
-    while True:
-        counter += 1
-        if counter >= 60:
-            print("Waiting to run job...")
-            counter = 0
-        # Run the scheduled jobs
-        schedule.run_pending()
-        time.sleep(1)  # Sleep for 1 second to avoid high CPU usage
+    if run_time != "DEBUG" and run_time != "ADMIN":
+        while True:
+            counter += 1
+            if counter >= 60:
+                print("Waiting to run job...")
+                counter = 0
+            # Run the scheduled jobs
+            schedule.run_pending()
+            time.sleep(1)  # Sleep for 1 second to avoid high CPU usage
